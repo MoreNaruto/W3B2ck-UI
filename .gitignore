@@ -1,4 +1,5 @@
 .DS_Store
+LICENSE
 Thumbs.db
 db.json
 *.log
