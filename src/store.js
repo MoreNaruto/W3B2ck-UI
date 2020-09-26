@@ -13,10 +13,12 @@ import {
   DirectionalLight,
   AmbientLight,
   LineBasicMaterial,
+  LineDashedMaterial,
   Geometry,
   Vector3,
-  Line
+  Line,
 } from "three-full";
+import json from "./assets/sample.json";
 
 Vue.use(Vuex);
 
@@ -29,24 +31,28 @@ export default new Vuex.Store({
     scene: null,
     renderer: null,
     axisLines: [],
-    pyramids: []
+    pyramids: [],
   },
+
   getters: {
-    CAMERA_POSITION: state => {
+    CAMERA_POSITION: (state) => {
       return state.camera ? state.camera.position : null;
-    }
+    },
   },
+
   mutations: {
     SET_VIEWPORT_SIZE(state, { width, height }) {
       state.width = width;
       state.height = height;
     },
+
     INITIALIZE_RENDERER(state, el) {
       state.renderer = new WebGLRenderer({ antialias: true });
       state.renderer.setPixelRatio(window.devicePixelRatio);
       state.renderer.setSize(state.width, state.height);
       el.appendChild(state.renderer.domElement);
     },
+
     INITIALIZE_CAMERA(state) {
       state.camera = new PerspectiveCamera(
         // 1. Field of View (degrees)
@@ -58,8 +64,9 @@ export default new Vuex.Store({
         // 4. Far clipping plane
         1000
       );
-      state.camera.position.z = 500;
+      state.camera.position.z = 50;
     },
+
     INITIALIZE_CONTROLS(state) {
       state.controls = new TrackballControls(
         state.camera,
@@ -74,27 +81,35 @@ export default new Vuex.Store({
       state.controls.dynamicDampingFactor = 0.3;
       state.controls.keys = [65, 83, 68];
     },
+
     UPDATE_CONTROLS(state) {
       state.controls.update();
     },
-    INITIALIZE_SCENE(state) {
+
+    INITIALIZE_SCENE(state, plotPoints) {
       state.scene = new Scene();
       state.scene.background = new Color(0xcccccc);
       state.scene.fog = new FogExp2(0xcccccc, 0.002);
+
       var geometry = new CylinderBufferGeometry(0, 10, 30, 4, 1);
       var material = new MeshPhongMaterial({
         color: 0xffffff,
-        flatShading: true
+        flatShading: true,
       });
-      for (var i = 0; i < 500; i++) {
-        var mesh = new Mesh(geometry, material);
-        mesh.position.x = (Math.random() - 0.5) * 1000;
-        mesh.position.y = (Math.random() - 0.5) * 1000;
-        mesh.position.z = (Math.random() - 0.5) * 1000;
-        mesh.updateMatrix();
-        mesh.matrixAutoUpdate = false;
-        state.pyramids.push(mesh);
+
+      var linePlotPoints = new LineBasicMaterial({
+        color: 0x000000,
+        linewidth: 10,
+      });
+      var geometry = new Geometry();
+      for (var i = 0; i < plotPoints.length; i++) {
+        const plotPoint = plotPoints[i]
+        geometry.vertices.push(
+          new Vector3(plotPoint.Px, plotPoint.Py, plotPoint.Pz)
+        );
       }
+      var line = new Line(geometry, linePlotPoints);
+      state.pyramids.push(line);
       state.scene.add(...state.pyramids);
 
       // lights
@@ -108,15 +123,25 @@ export default new Vuex.Store({
       state.scene.add(lightC);
 
       // Axis Line 1
-      var materialB = new LineBasicMaterial({ color: 0x0000ff });
-      var geometryB = new Geometry();
-      geometryB.vertices.push(new Vector3(0, 0, 0));
-      geometryB.vertices.push(new Vector3(0, 1000, 0));
-      var lineA = new Line(geometryB, materialB);
+      var linePlotPoints = new LineDashedMaterial({
+        color: 0x0000ff,
+        linewidth: 10,
+        dashSize: 10,
+        gapSize: 10,
+      });
+      var geometry = new Geometry();
+      geometry.vertices.push(new Vector3(0, 0, 0));
+      geometry.vertices.push(new Vector3(0, 1000, 0));
+      var lineA = new Line(geometry, linePlotPoints);
       state.axisLines.push(lineA);
 
       // Axis Line 2
-      var materialC = new LineBasicMaterial({ color: 0x00ff00 });
+      var materialC = new LineDashedMaterial({
+        color: 0x00ff00,
+        linewidth: 10,
+        dashSize: 10,
+        gapSize: 10,
+      });
       var geometryC = new Geometry();
       geometryC.vertices.push(new Vector3(0, 0, 0));
       geometryC.vertices.push(new Vector3(1000, 0, 0));
@@ -124,7 +149,12 @@ export default new Vuex.Store({
       state.axisLines.push(lineB);
 
       // Axis 3
-      var materialD = new LineBasicMaterial({ color: 0xff0000 });
+      var materialD = new LineDashedMaterial({
+        color: 0xff0000,
+        linewidth: 10,
+        dashSize: 10,
+        gapSize: 10,
+      });
       var geometryD = new Geometry();
       geometryD.vertices.push(new Vector3(0, 0, 0));
       geometryD.vertices.push(new Vector3(0, 0, 1000));
@@ -133,6 +163,7 @@ export default new Vuex.Store({
 
       state.scene.add(...state.axisLines);
     },
+
     RESIZE(state, { width, height }) {
       state.width = width;
       state.height = height;
@@ -142,11 +173,13 @@ export default new Vuex.Store({
       state.controls.handleResize();
       state.renderer.render(state.scene, state.camera);
     },
+
     SET_CAMERA_POSITION(state, { x, y, z }) {
       if (state.camera) {
         state.camera.position.set(x, y, z);
       }
     },
+
     RESET_CAMERA_ROTATION(state) {
       if (state.camera) {
         state.camera.rotation.set(0, 0, 0);
@@ -155,31 +188,36 @@ export default new Vuex.Store({
         state.controls.target.set(0, 0, 0);
       }
     },
+
     HIDE_AXIS_LINES(state) {
       state.scene.remove(...state.axisLines);
       state.renderer.render(state.scene, state.camera);
     },
+
     SHOW_AXIS_LINES(state) {
       state.scene.add(...state.axisLines);
       state.renderer.render(state.scene, state.camera);
     },
+
     HIDE_PYRAMIDS(state) {
       state.scene.remove(...state.pyramids);
       state.renderer.render(state.scene, state.camera);
     },
+
     SHOW_PYRAMIDS(state) {
       state.scene.add(...state.pyramids);
       state.renderer.render(state.scene, state.camera);
-    }
+    },
   },
+
   actions: {
     INIT({ state, commit }, { width, height, el }) {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         commit("SET_VIEWPORT_SIZE", { width, height });
         commit("INITIALIZE_RENDERER", el);
         commit("INITIALIZE_CAMERA");
         commit("INITIALIZE_CONTROLS");
-        commit("INITIALIZE_SCENE");
+        commit("INITIALIZE_SCENE", json);
 
         // Initial scene rendering
         state.renderer.render(state.scene, state.camera);
@@ -198,6 +236,6 @@ export default new Vuex.Store({
         dispatch("ANIMATE");
         state.controls.update();
       });
-    }
-  }
+    },
+  },
 });
