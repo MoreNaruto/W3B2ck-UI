@@ -16,6 +16,7 @@ import {
   LineDashedMaterial,
   Geometry,
   Vector3,
+  Vector4,
   Line,
 } from "three-full";
 import json from "./assets/sample.json";
@@ -105,7 +106,7 @@ export default new Vuex.Store({
       for (var i = 0; i < plotPoints.length; i++) {
         const plotPoint = plotPoints[i]
         geometry.vertices.push(
-          new Vector3(plotPoint.Px, plotPoint.Py, plotPoint.Pz)
+          new Vector3(plotPoint.px, plotPoint.py, plotPoint.pz)
         );
       }
       var line = new Line(geometry, linePlotPoints);
@@ -122,7 +123,7 @@ export default new Vuex.Store({
       var lightC = new AmbientLight(0x222222);
       state.scene.add(lightC);
 
-      // Axis Line 1
+      // Axis Line 1 (blue)
       var linePlotPoints = new LineDashedMaterial({
         color: 0x0000ff,
         linewidth: 10,
@@ -131,11 +132,11 @@ export default new Vuex.Store({
       });
       var geometry = new Geometry();
       geometry.vertices.push(new Vector3(0, 0, 0));
-      geometry.vertices.push(new Vector3(0, 1000, 0));
+      geometry.vertices.push(new Vector3(0, 100, 0));
       var lineA = new Line(geometry, linePlotPoints);
       state.axisLines.push(lineA);
 
-      // Axis Line 2
+      // Axis Line 2 (Green)
       var materialC = new LineDashedMaterial({
         color: 0x00ff00,
         linewidth: 10,
@@ -144,11 +145,11 @@ export default new Vuex.Store({
       });
       var geometryC = new Geometry();
       geometryC.vertices.push(new Vector3(0, 0, 0));
-      geometryC.vertices.push(new Vector3(1000, 0, 0));
+      geometryC.vertices.push(new Vector3(100, 0, 0));
       var lineB = new Line(geometryC, materialC);
       state.axisLines.push(lineB);
 
-      // Axis 3
+      // Axis Line 3 (Red)
       var materialD = new LineDashedMaterial({
         color: 0xff0000,
         linewidth: 10,
@@ -157,7 +158,7 @@ export default new Vuex.Store({
       });
       var geometryD = new Geometry();
       geometryD.vertices.push(new Vector3(0, 0, 0));
-      geometryD.vertices.push(new Vector3(0, 0, 1000));
+      geometryD.vertices.push(new Vector3(0, 0, 100));
       var lineC = new Line(geometryD, materialD);
       state.axisLines.push(lineC);
 
